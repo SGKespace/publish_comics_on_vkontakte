@@ -26,10 +26,10 @@ def main():
     comics_url, comics_title = get_comic()
     path_to_file = download_comics_image(comics_url)
     upload_url = get_url_upload(vk_token, group_id)
+    upload_photo_on_wall(path_to_file, upload_url)
 
 
-    #  тут будет новая функция
-
+def upload_photo_on_wall(path_to_file, upload_url):
     with open(path_to_file, 'rb') as photo:
         files = {'Content-Type': 'multipart/form-data', 'photo': photo}
         response = requests.post(upload_url, files=files)
@@ -38,6 +38,8 @@ def main():
     upload_server = upload_response['server']
     upload_photo = upload_response['photo']
     upload_hash = upload_response['hash']
+
+    return upload_server, upload_photo, upload_hash
 
 
 def get_url_upload(vk_token, group_id):
