@@ -16,7 +16,7 @@ requests 2.24.0
 
 Можно установить командой  
 ``` 
-PIP install -r requirement.txt
+PIP install -r requirements.txt
 ```
 
 ## Отказ от ответственности
