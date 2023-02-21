@@ -26,7 +26,28 @@ def main():
     comics_url, comics_title = get_comic()
     path_to_file = download_comics_image(comics_url)
     upload_url = get_url_upload(vk_token, group_id)
-    upload_photo_on_wall(path_to_file, upload_url)
+    server_id, photo, photo_hash = upload_photo_on_wall(path_to_file, upload_url)
+
+
+    # тут будет функция save_photo_to_vk
+    url_method = 'https://api.vk.com/method/photos.saveWallPhoto'
+    params = {
+        'server': server_id,
+        'photo': photo,
+        'hash': photo_hash,
+        'access_token': vk_token,
+        'group_id': group_id,
+         'v': 5.131
+              }
+
+    response = requests.post(url_method, params=params)
+    save_photo_response = response.json()
+    owner_id = save_photo_response['response'][0]['owner_id']
+    photo_id = save_photo_response['response'][0]['id']
+
+    print(owner_id, photo_id)
+
+
 
 
 def upload_photo_on_wall(path_to_file, upload_url):
