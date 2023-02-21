@@ -22,10 +22,22 @@ def main():
     load_dotenv()
     vk_token = os.environ["VK_TOKEN"]
     group_id = 218953627
-    # print(get_url_upload(vk_token, group_id))
 
     comics_url, comics_title = get_comic()
-    comics_image_path = download_comics_image(comics_url)
+    path_to_file = download_comics_image(comics_url)
+    upload_url = get_url_upload(vk_token, group_id)
+
+
+    #  тут будет новая функция
+
+    with open(path_to_file, 'rb') as photo:
+        files = {'Content-Type': 'multipart/form-data', 'photo': photo}
+        response = requests.post(upload_url, files=files)
+
+    upload_response = response.json()
+    upload_server = upload_response['server']
+    upload_photo = upload_response['photo']
+    upload_hash = upload_response['hash']
 
 
 def get_url_upload(vk_token, group_id):
@@ -88,7 +100,7 @@ def download_comics_image(url):
     with path_to_save_files.open('wb') as file:
         file.write(photo_response.content)
 
-    return file_name
+    return path_to_save_files
 
 
 
