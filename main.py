@@ -3,7 +3,7 @@ from pathlib import Path
 import urllib
 import os
 from dotenv import load_dotenv
-
+import random
 
 def return_pars_name(url):
     spliten_url = urllib.parse.urlsplit(url)
@@ -22,7 +22,8 @@ def main():
     load_dotenv()
     vk_token = os.environ["VK_TOKEN"]
     group_id = 218953627
-    print(get_url_upload(vk_token, group_id))
+    # print(get_url_upload(vk_token, group_id))
+    get_comic()
 
 
 def get_url_upload(vk_token, group_id):
@@ -42,10 +43,6 @@ def get_url_upload(vk_token, group_id):
 
 
 
-
-
-
-
 def get_groups(vk_token):
     url_method = 'https://api.vk.com/method/groups.get'
     params = {
@@ -62,21 +59,21 @@ def get_groups(vk_token):
 
 
 def get_comic():
-    url_vk = 'https://vk.com/public218953627'
-    # url = 'https://xkcd.com/info.0.json'
-    url = 'https://xkcd.com/353/info.0.json'
+    url = 'https://xkcd.com/info.0.json'
     response = requests.get(url)
     response.raise_for_status()
-    request = response.json()
-    img_url = request['img']
-    text = request['alt']
-    (file_name, file_extension) = return_pars_name(img_url)
-    photo_response = requests.get(img_url)
-    path_to_save_files = Path(f'images/{file_name}{file_extension}')
-    path_to_save_files.parent.mkdir(parents=True, exist_ok=True)
-    with path_to_save_files.open('wb') as file:
-        file.write(photo_response.content)
-    print(text)
+    all_comics_count = response.json()['num']
+
+    random.seed()
+    random_comic_index = random.randint(0, all_comics_count)
+
+    url = f'https://xkcd.com/{random_comic_index}/info.0.json'
+    response = requests.get(url)
+    response.raise_for_status()
+    comics_data = response.json()
+    return comics_data['img'], comics_data['alt']
+
+
 
 
 if __name__ == '__main__':
