@@ -20,13 +20,34 @@ def download_file(url, path_to_save_files, params: str = ''):
 
 def main():
     load_dotenv()
-    vk_client_id = os.environ["VK_CLIENT_ID"]
     vk_token = os.environ["VK_TOKEN"]
-    get_grouups(vk_token)
-    
+    group_id = 218953627
+    print(get_url_upload(vk_token, group_id))
 
-def get_grouups(vk_token):
-    url_method = 'https://api.vk.com/method/groups.get'  #  список ваших групп.
+
+def get_url_upload(vk_token, group_id):
+    url_method = 'https://api.vk.com/method/photos.getWallUploadServer'
+    params = {
+        'access_token': vk_token,
+        'group_id': group_id,
+        'v': 5.131
+               }
+
+    response = requests.get(url_method, params=params)
+    response.raise_for_status()
+    response_message = response.json()
+    upload_url = response_message['response']['upload_url']
+
+    return upload_url
+
+
+
+
+
+
+
+def get_groups(vk_token):
+    url_method = 'https://api.vk.com/method/groups.get'
     params = {
         'access_token': vk_token,
         'v': 5.131,
@@ -34,8 +55,10 @@ def get_grouups(vk_token):
     }
 
     response = requests.get(url_method, params=params)
-    response_message = response.json()
-    print(response_message)
+    response.raise_for_status()
+    groups = response.json()
+
+    return groups
 
 
 def get_comic():
