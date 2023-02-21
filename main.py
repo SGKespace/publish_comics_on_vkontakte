@@ -23,7 +23,9 @@ def main():
     vk_token = os.environ["VK_TOKEN"]
     group_id = 218953627
     # print(get_url_upload(vk_token, group_id))
-    get_comic()
+
+    comics_url, comics_title = get_comic()
+    comics_image_path = download_comics_image(comics_url)
 
 
 def get_url_upload(vk_token, group_id):
@@ -71,8 +73,35 @@ def get_comic():
     response = requests.get(url)
     response.raise_for_status()
     comics_data = response.json()
+
     return comics_data['img'], comics_data['alt']
 
+
+def download_comics_image(url):
+
+    photo_response = requests.get(url)
+    (file_name, file_extension) = return_pars_name(url)
+
+    path_to_save_files = Path(f'images/{file_name}{file_extension}')
+    path_to_save_files.parent.mkdir(parents=True, exist_ok=True)
+
+    with path_to_save_files.open('wb') as file:
+        file.write(photo_response.content)
+
+    return file_name
+
+
+
+    response = requests.get(url)
+    response.raise_for_status()
+
+    file_path = urllib.parse.unquote(urlparse(url).path)
+    path, file_name = os.path.split(file_path)
+
+    with open(file_name, 'wb') as file:
+        file.write(response.content)
+
+    return file_name
 
 
 
