@@ -1,21 +1,10 @@
-import requests
-from pathlib import Path
-import urllib
-import os
 from dotenv import load_dotenv
+import os
 import random
 
-def return_pars_name(url):
-    spliten_url = urllib.parse.urlsplit(url)
-    (full_path, full_name) = os.path.split(spliten_url.path)
-    return os.path.splitext(full_name)
-
-
-def download_file(url, path_to_save_files, params: str = ''):
-    photo_response = requests.get(url, params=params)
-    photo_response.raise_for_status()
-    with path_to_save_files.open('wb') as file:
-        file.write(photo_response.content)
+from pathlib import Path
+import requests
+import urllib
 
 
 def main():
@@ -30,8 +19,25 @@ def main():
     upload_url = get_url_upload(vk_token, group_id)
     server_id, photo, photo_hash = upload_photo_on_wall(path_to_file, upload_url)
     owner_id, photo_id = save_photo_to_vk(server_id, photo, photo_hash, vk_token, group_id)
+    requests = post_photo_on_wall_vk(vk_token, group_id, comics_title, owner_id, photo_id)
+    os.remove(path_to_file)
+    print(requests)
 
-# будет функция post_photo_on_wall
+
+def return_pars_name(url):
+    spliten_url = urllib.parse.urlsplit(url)
+    (full_path, full_name) = os.path.split(spliten_url.path)
+    return os.path.splitext(full_name)
+
+
+def download_file(url, path_to_save_files, params: str = ''):
+    photo_response = requests.get(url, params=params)
+    photo_response.raise_for_status()
+    with path_to_save_files.open('wb') as file:
+        file.write(photo_response.content)
+
+
+def post_photo_on_wall_vk(vk_token, group_id, comics_title, owner_id, photo_id):
     url_method = 'https://api.vk.com/method/wall.post/'
     params = {
         'access_token': vk_token,
@@ -45,7 +51,7 @@ def main():
     response = requests.post(url_method,  params=params,)
     post_photo_response = response.json()
 
-    print(post_photo_response)
+    return post_photo_response
 
 
 def save_photo_to_vk(server_id, photo, photo_hash, vk_token, group_id):
@@ -140,20 +146,6 @@ def download_comics_image(url):
         file.write(photo_response.content)
 
     return path_to_save_files
-
-
-
-    response = requests.get(url)
-    response.raise_for_status()
-
-    file_path = urllib.parse.unquote(urlparse(url).path)
-    path, file_name = os.path.split(file_path)
-
-    with open(file_name, 'wb') as file:
-        file.write(response.content)
-
-    return file_name
-
 
 
 if __name__ == '__main__':
