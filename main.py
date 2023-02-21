@@ -21,15 +21,34 @@ def download_file(url, path_to_save_files, params: str = ''):
 def main():
     load_dotenv()
     vk_token = os.environ["VK_TOKEN"]
+    vk_client_id = os.environ["VK_CLIENT_ID"]
+    # get_groups(vk_token) смотрим все свои группы и выбираем нужную
     group_id = 218953627
 
     comics_url, comics_title = get_comic()
     path_to_file = download_comics_image(comics_url)
     upload_url = get_url_upload(vk_token, group_id)
     server_id, photo, photo_hash = upload_photo_on_wall(path_to_file, upload_url)
+    owner_id, photo_id = save_photo_to_vk(server_id, photo, photo_hash, vk_token, group_id)
+
+# будет функция post_photo_on_wall
+    url_method = 'https://api.vk.com/method/wall.post/'
+    params = {
+        'access_token': vk_token,
+        'owner_id': f'-{group_id}',
+        'from_group': -1,
+        'message': comics_title,
+        'attachments': {f'photo{owner_id}_{photo_id}'},
+        'v': 5.131
+               }
+
+    response = requests.post(url_method,  params=params,)
+    post_photo_response = response.json()
+
+    print(post_photo_response)
 
 
-    # тут будет функция save_photo_to_vk
+def save_photo_to_vk(server_id, photo, photo_hash, vk_token, group_id):
     url_method = 'https://api.vk.com/method/photos.saveWallPhoto'
     params = {
         'server': server_id,
@@ -45,9 +64,7 @@ def main():
     owner_id = save_photo_response['response'][0]['owner_id']
     photo_id = save_photo_response['response'][0]['id']
 
-    print(owner_id, photo_id)
-
-
+    return owner_id, photo_id
 
 
 def upload_photo_on_wall(path_to_file, upload_url):
@@ -79,7 +96,6 @@ def get_url_upload(vk_token, group_id):
     return upload_url
 
 
-
 def get_groups(vk_token):
     url_method = 'https://api.vk.com/method/groups.get'
     params = {
@@ -91,7 +107,7 @@ def get_groups(vk_token):
     response = requests.get(url_method, params=params)
     response.raise_for_status()
     groups = response.json()
-
+    print(groups)
     return groups
 
 
