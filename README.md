@@ -6,7 +6,7 @@
 Пример файла .env
 ``` 
 VK_TOKEN='vk1.a.CRv-aE6vkhgklhkho8yo8y71y5UGBpsoXZgTk-HaezHvmhfcjhdhdFJYFI9YGKBGLHJg,jb,73YTIAcUMAnI3Mb1mD-ikNtZSrvUKsZXuUh6YSPM4Nq1xCyDIwJhDc-EYmhgvkhhjjkkkhgkfjfgkhYz_w'
-
+VK_GROUP_ID='218953627'
 ```
 
 ## Требования к окружению
