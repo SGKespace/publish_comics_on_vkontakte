@@ -6,6 +6,10 @@ from pathlib import Path
 import requests
 import urllib
 
+class VkErrors(Exception):
+   def __str__(self):
+        return Exception
+
 
 def main():
     load_dotenv()
@@ -14,7 +18,10 @@ def main():
 
     try:
         comics_url, comics_title = get_comic()
-        path_to_file = download_comics_image(comics_url)
+        file_name, file_extension = get_extension_name_img(comics_url)
+        path_to_file = create_path_to_save_files(file_name, file_extension)
+        path_to_file.parent.mkdir(parents=True, exist_ok=True)
+        download_comics_image(comics_url, path_to_file)
         upload_url = get_upload_url(vk_token, vk_group_id)
         server_id, photo, photo_hash = upload_photo_on_wall(path_to_file, upload_url)
         owner_id, photo_id = save_photo_to_vk(server_id, photo, photo_hash, vk_token, vk_group_id)
@@ -22,14 +29,14 @@ def main():
     except requests.exceptions.HTTPError:
         print('Cформировался неверный запрос.')
     except VkErrors as error:
-        print('Ошибка при обращении к API во Вконтакте:', error)
+        print(error.args[0])
     finally:
         shutil.rmtree('images')
 
 
-def return_pars_name_img(url):
-    spliten_url = urllib.parse.urlsplit(url)
-    (full_path, full_name) = os.path.split(spliten_url.path)
+def get_extension_name_img(url):
+    split_url = urllib.parse.urlsplit(url)
+    full_path, full_name = os.path.split(split_url.path)
     return os.path.splitext(full_name)
 
 
@@ -45,9 +52,12 @@ def post_photo_on_wall_vk(vk_token, vk_group_id, comics_title, owner_id, photo_i
                }
 
     response = requests.post(url_method,  params=params,)
-    post_photo_response = response.json()
-
-    return post_photo_response
+    response.raise_for_status()
+    try:
+        post_photo_response = response.json()
+        return post_photo_response
+    except KeyError:
+        raise VkErrors(response['error']['error_msg'])
 
 
 def save_photo_to_vk(server_id, photo, photo_hash, vk_token, vk_group_id):
@@ -62,24 +72,30 @@ def save_photo_to_vk(server_id, photo, photo_hash, vk_token, vk_group_id):
               }
 
     response = requests.post(url_method, params=params)
-    save_photo_response = response.json()
-    owner_id = save_photo_response['response'][0]['owner_id']
-    photo_id = save_photo_response['response'][0]['id']
-
-    return owner_id, photo_id
+    response.raise_for_status()
+    try:
+        save_photo_response = response.json()
+        owner_id = save_photo_response['response'][0]['owner_id']
+        photo_id = save_photo_response['response'][0]['id']
+        return owner_id, photo_id
+    except KeyError:
+        raise VkErrors(response['error']['error_msg'])
 
 
 def upload_photo_on_wall(path_to_file, upload_url):
     with open(path_to_file, 'rb') as photo:
         files = {'Content-Type': 'multipart/form-data', 'photo': photo}
         response = requests.post(upload_url, files=files)
+        response.raise_for_status()
 
     upload_response = response.json()
-    upload_server = upload_response['server']
-    upload_photo = upload_response['photo']
-    upload_hash = upload_response['hash']
-
-    return upload_server, upload_photo, upload_hash
+    try:
+        upload_server = upload_response['server']
+        upload_photo = upload_response['photo']
+        upload_hash = upload_response['hash']
+        return upload_server, upload_photo, upload_hash
+    except KeyError:
+        raise VkErrors(upload_response['error']['error_msg'])
 
 
 def get_upload_url(vk_token, vk_group_id):
@@ -93,9 +109,11 @@ def get_upload_url(vk_token, vk_group_id):
     response = requests.get(url_method, params=params)
     response.raise_for_status()
     response_message = response.json()
-    upload_url = response_message['response']['upload_url']
-
-    return upload_url
+    try:
+        upload_url = response_message['response']['upload_url']
+        return upload_url
+    except KeyError:
+        raise VkErrors(response_message['error']['error_msg'])
 
 
 def get_comic():
@@ -111,24 +129,19 @@ def get_comic():
     response = requests.get(url)
     response.raise_for_status()
     comics_data = response.json()
-
     return comics_data['img'], comics_data['alt']
+
 
 def create_path_to_save_files(file_name, file_extension):
     path_to_save_files = Path(f'images/{file_name}{file_extension}')
-    path_to_save_files.parent.mkdir(parents=True, exist_ok=True)
     return path_to_save_files
 
 
-def download_comics_image(url):
+def download_comics_image(url, path_to_file):
     photo_response = requests.get(url)
-    file_name, file_extension = return_pars_name_img(url)
-    path_to_save_files = create_path_to_save_files(file_name, file_extension)
-
-    with path_to_save_files.open('wb') as file:
+    photo_response.raise_for_status()
+    with path_to_file.open('wb') as file:
         file.write(photo_response.content)
-
-    return path_to_save_files
 
 
 if __name__ == '__main__':
