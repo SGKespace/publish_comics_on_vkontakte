@@ -52,8 +52,8 @@ def post_photo_on_wall_vk(vk_token, vk_group_id, comics_title, owner_id, photo_i
                }
 
     response = requests.post(url_method,  params=params,)
-    response.raise_for_status()
     try:
+        response.raise_for_status()
         post_photo_response = response.json()
         return post_photo_response
     except KeyError:
@@ -72,8 +72,8 @@ def save_photo_to_vk(server_id, photo, photo_hash, vk_token, vk_group_id):
               }
 
     response = requests.post(url_method, params=params)
-    response.raise_for_status()
     try:
+        response.raise_for_status()
         save_photo_response = response.json()
         owner_id = save_photo_response['response'][0]['owner_id']
         photo_id = save_photo_response['response'][0]['id']
@@ -86,10 +86,9 @@ def upload_photo_on_wall(path_to_file, upload_url):
     with open(path_to_file, 'rb') as photo:
         files = {'Content-Type': 'multipart/form-data', 'photo': photo}
         response = requests.post(upload_url, files=files)
-        response.raise_for_status()
-
-    upload_response = response.json()
     try:
+        response.raise_for_status()
+        upload_response = response.json()
         upload_server = upload_response['server']
         upload_photo = upload_response['photo']
         upload_hash = upload_response['hash']
@@ -105,11 +104,10 @@ def get_upload_url(vk_token, vk_group_id):
         'group_id': vk_group_id,
         'v': 5.131
                }
-
     response = requests.get(url_method, params=params)
-    response.raise_for_status()
-    response_message = response.json()
     try:
+        response.raise_for_status()
+        response_message = response.json()
         upload_url = response_message['response']['upload_url']
         return upload_url
     except KeyError:
